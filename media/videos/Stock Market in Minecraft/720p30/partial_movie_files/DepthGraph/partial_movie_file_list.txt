@@ -1,0 +1,12 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/DepthGraph/1987512680_3252591436_223132457.mp4'
+file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/DepthGraph/2538612922_2341082278_2460552782.mp4'
+file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/DepthGraph/2538612922_954834775_1660616407.mp4'
+file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/DepthGraph/2538612922_2019470699_2976026931.mp4'
+file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/DepthGraph/2538612922_2574473371_2967993849.mp4'
+file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/DepthGraph/2538612922_3464735437_3483980289.mp4'
+file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/DepthGraph/2538612922_2574473371_3062767345.mp4'
+file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/DepthGraph/2538612922_3522610886_825333220.mp4'
+file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/DepthGraph/2538612922_3915843260_4176063185.mp4'
+file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/DepthGraph/2538612922_1206940221_2666338662.mp4'
+file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/DepthGraph/2538612922_2364698678_2806606988.mp4'
