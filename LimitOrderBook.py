@@ -2,18 +2,17 @@ from decimal import Decimal
 from datetime import datetime
 
 class LOB:
-    def __init__(self, lotSize=1, epsilon=1, tickSize=1):
+    def __init__(self, lotSize=1, epsilon=1, tickSize=1):  # resolution params
         self.orderSet = []
         self.askSet = []
         self.bidSet = []
 
-        self.bidDepth = {}
+        self.bidDepth = {}  # {price: depth available}
         self.askDepth = {}
 
         self.lotSize = lotSize
         self.epsilon = epsilon
         self.tickSize = tickSize
-        self.tickStr = f"{tickSize}"
 
     def __checkPrice(self, price):
         if price % self.tickSize != 0:
@@ -43,11 +42,57 @@ class LOB:
     def PrintOrderCancel(price, size, time):
         print(f"Order canceled at {time} | Price = {price} | Units = {size}")
 
-    def PlaceOrder(self, price, size, time=datetime.now()):
+    def __matchOrders(self, price, size, time):
+        if size < 0: #bid order match to ask
+            usableSize = size
+            # sort orders by time, then pick out by price
+            for order in self.askSet.sort(key=lambda item: item[2]):
+                if usableSize == 0:
+                    return None
+                if order[0] == price:
+                    if order[1] == abs(usableSize) and order[1] + size >= 0:
+                        self.CancelOrder(order[0], order[1], order[2])
+                        usableSize = 0
+                    elif order[1] > abs(usableSize) and order[1] + size >= 0:
+                        self.editOrderDepth(order[0], order[1], order[2], usableSize)
+                        usableSize = 0
+                    elif order[1] < abs(usableSize) and order[1] + size >= 0:
+                        self.CancelOrder(order[0], order[1], order[2])
+                        usableSize += order[1] # usable size negative, ask order size positive
+            if usableSize != 0:
+                order = (price, usableSize, time)
+                return order
+            
+        elif size > 0: #ask order match to bid
+            usableSize = size
+            for order in self.bidSet.sort(key=lambda item: item[2]):
+                if usableSize == 0:
+                    return None
+                if order[0] == price:
+                    if order[1] == abs(usableSize) and order[1] + size <= 0:
+                        self.CancelOrder(order[0], order[1], order[2])
+                        usableSize = 0
+                    elif order[1] > abs(usableSize) and order[1] + size <= 0:
+                        self.editOrderDepth(order[0], order[1], order[2], usableSize)
+                        usableSize = 0
+                    elif order[1] < abs(usableSize) and order[1] + size <= 0:
+                        self.CancelOrder(order[0], order[1], order[2])
+                        usableSize += order[1] # usable size positive, bid order size negative
+            if usableSize != 0:
+                order = (price, usableSize, time)
+                return order
+                
+        else:
+            order = (price, size, time)
+            return order
+
+    def PlaceOrder(self, price, size, time=datetime.now()): # add order matching 
         self.__checkPrice(price)
         self.__checkSize(size)
 
-        order = (price, size, time)
+        order = self.__matchOrders(price, size, time)
+        if order is None:
+            return
 
         self.orderSet.append(order)
         self.addToSets(order)
@@ -116,11 +161,11 @@ class LOB:
         else:
             raise ValueError("Side must be either 'bid' or 'ask'.")
         
-    def getRelativeDepth(self, price, side):
+    def getRelativeDepth(self, distance, side):
         if side == "bid":
-            return self.getDepth(self.getRelativePrice(price, "bid"), "bid")
+            return self.getDepth(self.getRelativePrice(distance, "bid"), "bid")
         elif side == "ask":
-            return self.getDepth(self.getRelativePrice(price, "ask"), "ask")
+            return self.getDepth(self.getRelativePrice(distance, "ask"), "ask")
         
     def AddDepth(self, price, size):
         if size < 0:
@@ -133,6 +178,12 @@ class LOB:
             self.bidDepth[price] -= size
         elif size > 0:
             self.askDepth[price] -= size
-                       
+
+    def editOrderDepth(self, price, size, time, delta):
+        self.__checkSize(delta)
+        for order in self.orderSet:
+            if order[0] == price and order[1] == size and order[2] == time:
+                self.CancelOrder(order[0], order[1], order[2])
+                self.PlaceOrder(order[0], order[1] + delta, order[2])
 
     
