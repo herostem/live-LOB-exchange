@@ -91,11 +91,20 @@ class LOB:
             return None
         return (self.bidPrice + self.askPrice) / 2
     
+    # could also just use the depth dicts, but this is explicit method
     def getDepth(self, price, side):
         if side == "bid":
-            return sum(order[1] for order in self.bidSet if order[0] == price)
+            for order in self.bidSet:
+                if order[0] == price:
+                    return sum(order[1] for order in self.bidSet if order[0] == price)
+                else:
+                    raise ValueError("Price has no previous depth history.")
         elif side == "ask":
-            return sum(order[1] for order in self.askSet if order[0] == price)
+            for order in self.askSet:
+                if order[0] == price:
+                    return sum(order[1] for order in self.askSet if order[0] == price)
+                else:
+                    raise ValueError("Price has no previous depth history.")
         else:
             raise ValueError("Side must be either 'bid' or 'ask'.")
         
