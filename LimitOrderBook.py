@@ -50,13 +50,13 @@ class LOB:
                 if usableSize == 0:
                     return None
                 if order[0] == price:
-                    if order[1] == abs(usableSize) and order[1] + size >= 0:
+                    if order[1] == abs(usableSize):
                         self.CancelOrder(order[0], order[1], order[2])
                         usableSize = 0
-                    elif order[1] > abs(usableSize) and order[1] + size >= 0:
+                    elif order[1] > abs(usableSize):
                         self.editOrderDepth(order[0], order[1], order[2], usableSize)
                         usableSize = 0
-                    elif order[1] < abs(usableSize) and order[1] + size >= 0:
+                    elif order[1] < abs(usableSize):
                         self.CancelOrder(order[0], order[1], order[2])
                         usableSize += order[1] # usable size negative, ask order size positive
             if usableSize != 0:
@@ -69,13 +69,13 @@ class LOB:
                 if usableSize == 0:
                     return None
                 if order[0] == price:
-                    if order[1] == abs(usableSize) and order[1] + size <= 0:
+                    if order[1] == abs(usableSize):
                         self.CancelOrder(order[0], order[1], order[2])
                         usableSize = 0
-                    elif order[1] > abs(usableSize) and order[1] + size <= 0:
+                    elif order[1] > abs(usableSize):
                         self.editOrderDepth(order[0], order[1], order[2], usableSize)
                         usableSize = 0
-                    elif order[1] < abs(usableSize) and order[1] + size <= 0:
+                    elif order[1] < abs(usableSize):
                         self.CancelOrder(order[0], order[1], order[2])
                         usableSize += order[1] # usable size positive, bid order size negative
             if usableSize != 0:
@@ -111,6 +111,38 @@ class LOB:
                 self.RemoveDepth(price, size)
                 return
         raise ValueError("Order not found in the order set.")
+    
+    def MKTorder(self, size):
+        if size < 0: #bid order match to ask
+            usableSize = size
+            # sort orders by price
+            for order in self.askSet.sort(key=lambda item: item[0]): # ascending order
+                if usableSize == 0:
+                    return
+                elif order[1] == abs(usableSize):
+                    self.CancelOrder(order[0], order[1], order[2])
+                    usableSize = 0
+                elif order[1] > abs(usableSize):
+                    self.editOrderDepth(order[0], order[1], order[2], usableSize)
+                    usableSize = 0
+                elif order[1] < abs(usableSize):
+                    self.CancelOrder(order[0], order[1], order[2])
+                    usableSize += order[1] # usable size negative, ask order size positive
+            
+        elif size > 0: #ask order match to bid
+            usableSize = size
+            for order in self.bidSet.sort(key=lambda item: item[0], reverse=True): # descending order
+                if usableSize == 0:
+                    return
+                elif order[1] == abs(usableSize):
+                    self.CancelOrder(order[0], order[1], order[2])
+                    usableSize = 0
+                elif order[1] > abs(usableSize):
+                    self.editOrderDepth(order[0], order[1], order[2], usableSize)
+                    usableSize = 0
+                elif order[1] < abs(usableSize):
+                    self.CancelOrder(order[0], order[1], order[2])
+                    usableSize += order[1] # usable size positive, bid order size negative
     
     @property
     def bidPrice(self):
@@ -155,9 +187,9 @@ class LOB:
         
     def getRelativePrice(self, distance, side):
         if side == "bid":
-            return abs(self.bidPrice - distance) if self.bidPrice is not None else None
+            return self.bidPrice - distance if self.bidPrice is not None else None
         elif side == "ask":
-            return abs(distance - self.askPrice) if self.askPrice is not None else None
+            return distance - self.askPrice if self.askPrice is not None else None
         else:
             raise ValueError("Side must be either 'bid' or 'ask'.")
         
