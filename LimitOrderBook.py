@@ -7,6 +7,8 @@ class LOB:
         self.askSet = []
         self.bidSet = []
 
+        self.lastPrice = 0
+
         self.bidDepth = {}  # {price: depth available}
         self.askDepth = {}
 
@@ -23,7 +25,7 @@ class LOB:
             raise ValueError("Price must be specified to the accuracy of the tick size.")
         
     def __checkSize(self, size):
-        if size < self.lotSize:
+        if abs(size) < self.lotSize:
             raise ValueError("Size must be strictly greater than or equal to the lot size.")
         if size % self.epsilon != 0:
             raise ValueError("Size must be an increment of the epsilon.")
@@ -94,6 +96,7 @@ class LOB:
         if order is None:
             return
 
+        self.lastPrice = order[0]
         self.orderSet.append(order)
         self.addToSets(order)
         self.PrintOrderRecipt(order)
@@ -103,9 +106,9 @@ class LOB:
         for order in self.orderSet:
             if order[0] == price and order[1] == size and order[2] == time:
                 self.orderSet.remove(order)
-                if order[1] > 0:
+                if order[1] < 0:
                     self.bidSet.remove(order)
-                elif order[1] < 0:
+                elif order[1] > 0:
                     self.askSet.remove(order)
                 self.PrintOrderCancel(price, size, time)
                 self.RemoveDepth(price, size)
@@ -189,7 +192,7 @@ class LOB:
         if side == "bid":
             return self.bidPrice - distance if self.bidPrice is not None else None
         elif side == "ask":
-            return distance - self.askPrice if self.askPrice is not None else None
+            return abs(distance - self.askPrice) if self.askPrice is not None else None
         else:
             raise ValueError("Side must be either 'bid' or 'ask'.")
         
@@ -217,5 +220,17 @@ class LOB:
             if order[0] == price and order[1] == size and order[2] == time:
                 self.CancelOrder(order[0], order[1], order[2])
                 self.PlaceOrder(order[0], order[1] + delta, order[2])
+
+    @property
+    def allStats(self):
+        return [
+            self.bidPrice,
+            self.askPrice,
+            self.lastPrice,
+            self.spread,
+            self.midPrice,
+            self.askDepth,
+            self.bidDepth
+        ]
 
     
