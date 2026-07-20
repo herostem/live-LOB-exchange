@@ -44,6 +44,10 @@ class LOB:
     def PrintOrderCancel(price, size, time):
         print(f"Order canceled at {time} | Price = {price} | Units = {size}")
 
+    @staticmethod
+    def PrintOrderFill(price, size, time):
+        print(f"Order filled at {time} | Price = {price} | Units = {size}")
+
     def __matchOrders(self, price, size, time):
         if size < 0: #bid order match to ask
             usableSize = size
@@ -111,6 +115,19 @@ class LOB:
                 elif order[1] > 0:
                     self.askSet.remove(order)
                 self.PrintOrderCancel(price, size, time)
+                self.RemoveDepth(price, size)
+                return
+        raise ValueError("Order not found in the order set.")
+    
+    def fillOrder(self, price, size, time):
+        for order in self.orderSet:
+            if order[0] == price and order[1] == size and order[2] == time:
+                self.orderSet.remove(order)
+                if order[1] < 0:
+                    self.bidSet.remove(order)
+                elif order[1] > 0:
+                    self.askSet.remove(order)
+                self.PrintOrderFill(price, size, time)
                 self.RemoveDepth(price, size)
                 return
         raise ValueError("Order not found in the order set.")
@@ -204,21 +221,21 @@ class LOB:
         
     def AddDepth(self, price, size):
         if size < 0:
-            self.bidDepth[price] += size
+            self.bidDepth[f"{price}"] = self.bidDepth.get(f"{price}", 0) + size
         elif size > 0:
-            self.askDepth[price] += size
+            self.askDepth[f"{price}"] = self.askDepth.get(f"{price}", 0) + size
 
     def RemoveDepth(self, price, size):
         if size < 0:
-            self.bidDepth[price] -= size
+            self.bidDepth[f"{price}"] = self.bidDepth.get(f"{price}", 0) - size
         elif size > 0:
-            self.askDepth[price] -= size
+            self.askDepth[f"{price}"] = self.askDepth.get(f"{price}", 0) - size
 
-    def editOrderDepth(self, price, size, time, delta):
+    def editOrderDepth(self, price, size, time, delta): # used for filling
         self.__checkSize(delta)
         for order in self.orderSet:
             if order[0] == price and order[1] == size and order[2] == time:
-                self.CancelOrder(order[0], order[1], order[2])
+                self.fillOrder(order[0], order[1], order[2])
                 self.PlaceOrder(order[0], order[1] + delta, order[2])
 
     @property
