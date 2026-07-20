@@ -49,44 +49,87 @@ class LOB:
         print(f"Order filled at {time} | Price = {price} | Units = {size}")
 
     def __matchOrders(self, price, size, time):
+        if self.bidPrice is None or self.askPrice is None or self.bidSet is None or self.askSet is None:
+            order = (price, size, time)
+            return order
+
         if size < 0: #bid order match to ask
-            usableSize = size
-            # sort orders by time, then pick out by price
-            for order in self.askSet.sort(key=lambda item: item[2]):
-                if usableSize == 0:
-                    return None
-                if order[0] == price:
-                    if order[1] == abs(usableSize):
-                        self.CancelOrder(order[0], order[1], order[2])
-                        usableSize = 0
-                    elif order[1] > abs(usableSize):
-                        self.editOrderDepth(order[0], order[1], order[2], usableSize)
-                        usableSize = 0
-                    elif order[1] < abs(usableSize):
-                        self.CancelOrder(order[0], order[1], order[2])
-                        usableSize += order[1] # usable size negative, ask order size positive
-            if usableSize != 0:
-                order = (price, usableSize, time)
-                return order
+            if price < self.askPrice:
+                return (price, size, time)
             
-        elif size > 0: #ask order match to bid
             usableSize = size
-            for order in self.bidSet.sort(key=lambda item: item[2]):
-                if usableSize == 0:
-                    return None
-                if order[0] == price:
-                    if order[1] == abs(usableSize):
-                        self.CancelOrder(order[0], order[1], order[2])
-                        usableSize = 0
-                    elif order[1] > abs(usableSize):
-                        self.editOrderDepth(order[0], order[1], order[2], usableSize)
-                        usableSize = 0
-                    elif order[1] < abs(usableSize):
-                        self.CancelOrder(order[0], order[1], order[2])
-                        usableSize += order[1] # usable size positive, bid order size negative
+
+            # sort orders by ascending price, and time
+            self.askSet.sort(key=lambda item: (item[0], item[2]))
+            matchedOrders = []
+
+            for order in self.askSet:
+                if usableSize == 0: # order filled
+                    break
+                if order[0] > price: # order price too high, cannot match
+                    break
+            
+                if order[1] == abs(usableSize):# perfect fill
+                    self.fillOrder(order[0], order[1], order[2])
+                    self.lastPrice = order[0]
+                    usableSize = 0
+                    break
+                elif order[1] > abs(usableSize):#partial fill (uses all available size of the bid order)
+                    self.editOrderDepth(order[0], order[1], order[2], usableSize)
+                    self.lastPrice = order[0]
+                    usableSize = 0
+                    break
+                elif order[1] < abs(usableSize):
+                    matchedOrders.append(order)
+                    usableSize += order[1] # usable size negative, ask order size positive
+
+            for order in matchedOrders:
+                self.fillOrder(order[0], order[1], order[2])
+                self.lastPrice = order[0]
+
             if usableSize != 0:
                 order = (price, usableSize, time)
                 return order
+            else:
+                return None
+    
+        elif size > 0: #ask order match to bid
+            if price > self.bidPrice:
+                return (price, size, time)
+            
+            usableSize = size
+            self.bidSet.sort(key=lambda item: (-item[0], item[2]))
+            matchedOrders = []
+
+            for order in self.bidSet:
+                if usableSize == 0:
+                    break
+                if order[0] < price: # order price too low, cannot match
+                    break
+
+                if order[1] == abs(usableSize):
+                    self.fillOrder(order[0], order[1], order[2])
+                    self.lastPrice = order[0]
+                    usableSize = 0
+                    break
+                elif order[1] > abs(usableSize):
+                    self.editOrderDepth(order[0], order[1], order[2], usableSize)
+                    self.lastPrice = order[0]
+                    usableSize = 0
+                    break
+                elif order[1] < abs(usableSize):
+                    matchedOrders.append(order)
+                    usableSize += order[1] # usable size positive, bid order size negative
+
+            for order in matchedOrders:
+                self.fillOrder(order[0], order[1], order[2])
+                self.lastPrice = order[0]
+
+            if usableSize != 0:
+                order = (price, usableSize, time)
+                return order
+            else:
+                return None
                 
         else:
             order = (price, size, time)
@@ -134,35 +177,80 @@ class LOB:
     
     def MKTorder(self, size):
         if size < 0: #bid order match to ask
+            if self.askSet is None:
+                return
+
             usableSize = size
-            # sort orders by price
-            for order in self.askSet.sort(key=lambda item: item[0]): # ascending order
+            self.askSet.sort(key=lambda item: (item[0], item[2]))
+            matchedOrders = []
+
+            for order in self.askSet: # ascending order
                 if usableSize == 0:
-                    return
+                    break
+
                 elif order[1] == abs(usableSize):
-                    self.CancelOrder(order[0], order[1], order[2])
+                    self.fillOrder(order[0], order[1], order[2])
+                    self.lastPrice = order[0]
                     usableSize = 0
+                    break
                 elif order[1] > abs(usableSize):
                     self.editOrderDepth(order[0], order[1], order[2], usableSize)
+                    self.lastPrice = order[0]
                     usableSize = 0
+                    break
                 elif order[1] < abs(usableSize):
-                    self.CancelOrder(order[0], order[1], order[2])
+                    matchedOrders.append(order)
                     usableSize += order[1] # usable size negative, ask order size positive
+
+            for order in matchedOrders:
+                self.fillOrder(order[0], order[1], order[2])
+                self.lastPrice = order[0]
+
+            if usableSize != 0:
+                if self.askPrice is None:
+                    return
+                self.PlaceOrder(self.bidPrice, usableSize)
+                return 
+            else:
+                return 
             
         elif size > 0: #ask order match to bid
+            if self.bidSet is None:
+                return
+
             usableSize = size
-            for order in self.bidSet.sort(key=lambda item: item[0], reverse=True): # descending order
+            self.bidSet.sort(key=lambda item: (-item[0], item[2]))
+            matchedOrders = []
+
+            for order in self.bidSet: # descending order
                 if usableSize == 0:
-                    return
+                    break
+                
                 elif order[1] == abs(usableSize):
-                    self.CancelOrder(order[0], order[1], order[2])
+                    self.fillOrder(order[0], order[1], order[2])
+                    self.lastPrice = order[0]
                     usableSize = 0
+                    break
                 elif order[1] > abs(usableSize):
                     self.editOrderDepth(order[0], order[1], order[2], usableSize)
+                    self.lastPrice = order[0]
                     usableSize = 0
+                    break
                 elif order[1] < abs(usableSize):
-                    self.CancelOrder(order[0], order[1], order[2])
+                    matchedOrders.append(order)
                     usableSize += order[1] # usable size positive, bid order size negative
+
+            for order in matchedOrders:
+                self.fillOrder(order[0], order[1], order[2])
+                self.lastPrice = order[0]
+
+            if usableSize != 0:
+                if self.bidPrice is None:
+                    return
+                self.PlaceOrder(self.askPrice, usableSize)
+                return 
+            else:
+                return 
     
     @property
     def bidPrice(self):
