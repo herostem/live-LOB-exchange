@@ -1,7 +1,0 @@
-# This file is used internally by FFMPEG.
-file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/bidaskGraph/1987512680_1687608115_223132457.mp4'
-file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/bidaskGraph/2538612922_954748155_3802436053.mp4'
-file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/bidaskGraph/2538612922_333447941_1811980067.mp4'
-file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/bidaskGraph/2538612922_454088834_1372055637.mp4'
-file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/bidaskGraph/2538612922_2364698678_3972465621.mp4'
-file 'file:C:/Projects/Youtube/Stock Market in Minecraft/media/videos/Stock Market in Minecraft/720p30/partial_movie_files/bidaskGraph/2538612922_2320810927_543045372.mp4'
