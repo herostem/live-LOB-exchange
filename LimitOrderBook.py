@@ -67,8 +67,6 @@ class LOB:
                 return order
             
             usableSize = abs(size)
-            matchedOrders = []
-
             # checks size, and if the best asks are lower than or eq to the bid order price
             while usableSize > 0 and self.askSet and self.askSet[0].price <= price:
                 x = self.askSet[0]
@@ -76,27 +74,20 @@ class LOB:
                     heapq.heappop(self.askSet)
                     continue
                 
-                if x.size == usableSize:# perfect fill
+                if x.quantity == usableSize:# perfect fill
                     self.fillOrder(x)
                     self.lastPrice = x.price
                     usableSize = 0
                     break
-                elif x.size > abs(usableSize): # spends all usable size without fully filling order
+                elif x.quantity > abs(usableSize): # spends all usable size without fully filling order
                     self.partialFillOrder(x, usableSize)
                     self.lastPrice = x.price
                     usableSize = 0
                     break
-                elif x.size < abs(usableSize):
-                    matchedOrders.append(x)
-                    usableSize = x.removeSize(usableSize)
-
-            for x in matchedOrders:
-                if x.isFilled:
+                elif x.quantity < abs(usableSize):
                     self.fillOrder(x)
                     self.lastPrice = x.price
-                else:
-                    raise ValueError("Unfilled order in matchedOrders list")
-
+                    usableSize -= x.quantity
             if usableSize != 0:
                 return order
             else:
@@ -107,8 +98,6 @@ class LOB:
                 return order
             
             usableSize = abs(size)
-            matchedOrders = []
-
             # the best bid prices must be greater than or equal to the ask order price
             while usableSize > 0 and self.bidSet and self.bidSet[0].price >= price:
                 x = self.bidSet[0]
@@ -116,27 +105,20 @@ class LOB:
                     heapq.heappop(self.bidSet)
                     continue
 
-                if x.size == abs(usableSize):
+                if x.quantity == abs(usableSize):
                     self.fillOrder(x)
                     self.lastPrice = x.price
                     usableSize = 0
                     break
-                elif x.size > abs(usableSize):
+                elif x.quantity > abs(usableSize):
                     self.partialFillOrder(x, usableSize)
                     self.lastPrice = x.price
                     usableSize = 0
                     break
-                elif x.size < abs(usableSize):
-                    matchedOrders.append(x)
-                    usableSize = x.removeSize(usableSize)
-
-            for x in matchedOrders:
-                if x.isFilled:
+                elif x.quantity < abs(usableSize):
                     self.fillOrder(x)
                     self.lastPrice = x.price
-                else:
-                    raise ValueError("Unfilled order in matchedOrders list")
-
+                    usableSize -= x.quantity
             if usableSize != 0:
                 return order
             else:
@@ -165,19 +147,19 @@ class LOB:
         for x in self.orderSet:
             if order == x:
                 self.orderSet.remove(order)
-                self.PrintOrderCancel(order.price, order.size, order.time)
+                self.PrintOrderCancel(order)
                 self.RemoveDepth(order.price, order.size)
                 if not order.isFilled:
                     order.size = 0
                 return
-        raise ValueError("Order to be cancelednot found in the order set.")
+        raise ValueError("Order to be canceled not found in the order set.")
 
     # sets order size to 0
     def fillOrder(self, order):
         for x in self.orderSet:
             if order == x:
                 self.orderSet.remove(order)
-                self.PrintOrderFill(order.price, order.size, order.time)
+                self.PrintOrderFill(order)
                 self.RemoveDepth(order.price, order.size)
                 if not order.isFilled:
                     order.size = 0
@@ -192,10 +174,11 @@ class LOB:
                 order.removeSize(delta)
                 self.RemoveDepth(order.price, delta)
 
-        if order.isFilled:
-            self.fillOrder(order)
-        else:
-            self.PrintPartialOrderFill(order, delta)
+            if order.isFilled:
+                self.fillOrder(order)
+            else:
+                self.PrintPartialOrderFill(order, delta)
+            return
         raise ValueError("Order to be partially filled not found in the order set.")
     
     def MKTorder(self, size):
@@ -204,35 +187,26 @@ class LOB:
                 return
 
             usableSize = abs(size)
-            matchedOrders = []
-
             while usableSize > 0 and self.askSet:
                 x = self.askSet[0]
                 if x.isFilled:
                     heapq.heappop(self.askSet)
                     continue
 
-                if x.size == abs(usableSize):
+                if x.quantity == abs(usableSize):
                     self.fillOrder(x)
                     self.lastPrice = x.price
                     usableSize = 0
                     break
-                elif x.size > abs(usableSize):
+                elif x.quantity > abs(usableSize):
                     self.partialFillOrder(x, usableSize)
                     self.lastPrice = x.price
                     usableSize = 0
                     break
-                elif x.size < abs(usableSize):
-                    matchedOrders.append(x)
-                    usableSize = x.removeSize(usableSize) # usable size negative, ask order size positive
-
-            for x in matchedOrders:
-                if x.isFilled:
+                elif x.quantity < abs(usableSize):
                     self.fillOrder(x)
                     self.lastPrice = x.price
-                else:
-                    raise ValueError("Unfilled order in matchedOrders list")
-
+                    usableSize -= x.quantity
             if usableSize != 0:
                 if self.askPrice is None:
                     return
@@ -246,35 +220,26 @@ class LOB:
                 return
 
             usableSize = abs(size)
-            matchedOrders = []
-
             while usableSize > 0 and self.bidSet:
                 x = self.bidSet[0]
                 if x.isFilled:
                     heapq.heappop(self.bidSet)
                     continue
 
-                if x.size == abs(usableSize):
+                if x.quantity == abs(usableSize):
                     self.fillOrder(x)
                     self.lastPrice = x.price
                     usableSize = 0
                     break
-                elif x.size > abs(usableSize):
+                elif x.quantity > abs(usableSize):
                     self.partialFillOrder(x, usableSize)
                     self.lastPrice = x.price
                     usableSize = 0
                     break
-                elif x.size < abs(usableSize):
-                    matchedOrders.append(x)
-                    usableSize = x.removeSize(usableSize) # usable size positive, bid order size negative
-
-            for x in matchedOrders:
-                if x.isFilled:
+                elif x.quantity < abs(usableSize):
                     self.fillOrder(x)
                     self.lastPrice = x.price
-                else:
-                    raise ValueError("Unfilled order in matchedOrders list")
-
+                    usableSize -= x.quantity
             if usableSize != 0:
                 if self.bidPrice is None:
                     return
