@@ -310,6 +310,12 @@ class LOB:
         elif side == "ask":
             self.askDepth[f"{price}"] = self.askDepth.get(f"{price}", 0) - abs(delta)
 
+    def findOrder(self, id):
+        for order in self.orderSet:
+            if order.id == id:
+                return order
+        return None
+
     @property
     def allStats(self):
         return [
