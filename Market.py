@@ -68,20 +68,12 @@ class Market:
 
     def rerunCheck(self):
         rerun = False
-
         for item in self.LOB.allStats:
             if item is None:
                 rerun = True
                 break
-        
         if rerun:
-            self.LOB.PlaceOrder(self.initialBid - self.rerunParams["priceDelta"], 
-                                -1 * self.LOB.lotSize * self.rerunParams["sizeMult"])
-            self.LOB.PlaceOrder(self.initialAsk + self.rerunParams["priceDelta"], 
-                                self.LOB.lotSize * self.rerunParams["sizeMult"])
-            print("Rerun triggered: Placing additional orders to maintain market depth.")
-        else:
-            return
+            self.__randomBegin()
 
     # adds more depth to prices closer to best quotes
     def __randomBegin(self):
