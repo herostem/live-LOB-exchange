@@ -59,13 +59,11 @@ class LOB:
     def __matchOrders(self, price, size, id):
         order = Order(price, size, id)
 
-        if self.bidPrice is None or self.askPrice is None or self.bidSet is None or self.askSet is None:
-            return order
-
         if size < 0: #bid order match to ask
+            if self.askPrice is None or self.askSet is None: # check opposite side
+                return order
             if price < self.askPrice:
                 return order
-            
             usableSize = abs(size)
             # checks size, and if the best asks are lower than or eq to the bid order price
             while usableSize > 0 and self.askSet and self.askSet[0].price <= price:
@@ -73,7 +71,6 @@ class LOB:
                 if x.isFilled:
                     heapq.heappop(self.askSet)
                     continue
-                
                 if x.quantity == usableSize:# perfect fill
                     self.fillOrder(x)
                     self.lastPrice = x.price
@@ -85,18 +82,19 @@ class LOB:
                     usableSize = 0
                     break
                 elif x.quantity < abs(usableSize):
-                    self.fillOrder(x)
-                    self.lastPrice = x.price
                     usableSize -= x.quantity
+                    self.fillOrder(x) # sets size 0
+                    self.lastPrice = x.price
             if usableSize != 0:
                 return order
             else:
                 return None
     
         elif size > 0: #ask order match to bid
+            if self.bidPrice is None or self.bidSet is None: # check opposite side
+                return order
             if price > self.bidPrice:
                 return order
-            
             usableSize = abs(size)
             # the best bid prices must be greater than or equal to the ask order price
             while usableSize > 0 and self.bidSet and self.bidSet[0].price >= price:
@@ -104,7 +102,6 @@ class LOB:
                 if x.isFilled:
                     heapq.heappop(self.bidSet)
                     continue
-
                 if x.quantity == abs(usableSize):
                     self.fillOrder(x)
                     self.lastPrice = x.price
@@ -116,9 +113,9 @@ class LOB:
                     usableSize = 0
                     break
                 elif x.quantity < abs(usableSize):
+                    usableSize -= x.quantity
                     self.fillOrder(x)
                     self.lastPrice = x.price
-                    usableSize -= x.quantity
             if usableSize != 0:
                 return order
             else:
@@ -204,13 +201,13 @@ class LOB:
                     usableSize = 0
                     break
                 elif x.quantity < abs(usableSize):
+                    usableSize -= x.quantity
                     self.fillOrder(x)
                     self.lastPrice = x.price
-                    usableSize -= x.quantity
             if usableSize != 0:
-                if self.askPrice is None:
+                if self.bidPrice is None:
                     return
-                self.PlaceOrder(self.bidPrice, usableSize)
+                self.PlaceOrder(self.bidPrice, -1 * usableSize)
                 return 
             else:
                 return 
@@ -237,11 +234,11 @@ class LOB:
                     usableSize = 0
                     break
                 elif x.quantity < abs(usableSize):
+                    usableSize -= x.quantity
                     self.fillOrder(x)
                     self.lastPrice = x.price
-                    usableSize -= x.quantity
             if usableSize != 0:
-                if self.bidPrice is None:
+                if self.askPrice is None:
                     return
                 self.PlaceOrder(self.askPrice, usableSize)
                 return 
