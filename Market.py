@@ -54,11 +54,9 @@ class Market:
                 if side == "bid":
                     self.LOB.PlaceOrder(self.LOB.getRelativePrice(i, "bid"),
                                         -1 * random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1, self.LOB.epsilon))
-                    return
                 elif side == "ask":
                     self.LOB.PlaceOrder(self.LOB.getRelativePrice(i, "ask"),
                                         random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1, self.LOB.epsilon))
-                    return
                 
     def checkMKTrates(self):
         rate = self.MKT_arrivalParams["mu"]
@@ -84,7 +82,17 @@ class Market:
             print("Rerun triggered: Placing additional orders to maintain market depth.")
         else:
             return
-                
+
+    # adds more depth to prices closer to best quotes
+    def __randomBegin(self):
+        for i in range(10):
+            while i > 0:
+                self.LOB.PlaceOrder(self.initialBid - i, 
+                                    -1 * random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1, self.LOB.epsilon))
+                self.LOB.PlaceOrder(self.initialAsk + i, 
+                                    random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1, self.LOB.epsilon))
+                i -= 1
+            
     def __update(self):
         self.rerunCheck()
         self.checkLMTrates("bid")
@@ -94,6 +102,7 @@ class Market:
         print(f"Bid: {self.LOB.bidPrice}, Ask: {self.LOB.askPrice}, Last Price: {self.LOB.lastPrice}, Spread: {self.LOB.spread}, Mid Price: {self.LOB.midPrice}") # just for testing
             
     def runMarket(self, run_time):
+        self.__randomBegin()
         while run_time > 0:
             self.__update()
             run_time -= 1
