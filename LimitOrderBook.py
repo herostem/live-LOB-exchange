@@ -136,7 +136,7 @@ class LOB:
         self.orderSet.append(order) # no heap needed for orderSet
         self.addToSets(order) # uses heap
         self.PrintOrderRecipt(order)
-        self.AddDepth(price, size)
+        self.AddDepth(price, order.size, order.side)
         self.num += 1
 
     # sets order size to 0
@@ -145,7 +145,7 @@ class LOB:
             if order == x:
                 self.orderSet.remove(order)
                 self.PrintOrderCancel(order)
-                self.RemoveDepth(order.price, order.size)
+                self.RemoveDepth(order.price, order.size, order.side)
                 if not order.isFilled:
                     order.size = 0
                 return
@@ -157,7 +157,7 @@ class LOB:
             if order == x:
                 self.orderSet.remove(order)
                 self.PrintOrderFill(order)
-                self.RemoveDepth(order.price, order.size)
+                self.RemoveDepth(order.price, order.size, order.side)
                 if not order.isFilled:
                     order.size = 0
                 return
@@ -168,8 +168,8 @@ class LOB:
         self.__checkSize(delta)
         for x in self.orderSet:
             if order == x:
+                self.RemoveDepth(order.price, delta, order.side)
                 order.removeSize(delta)
-                self.RemoveDepth(order.price, delta)
 
             if order.isFilled:
                 self.fillOrder(order)
@@ -297,18 +297,18 @@ class LOB:
             return self.getDepth(self.getRelativePrice(distance, "bid"), "bid")
         elif side == "ask":
             return self.getDepth(self.getRelativePrice(distance, "ask"), "ask")
-        
-    def AddDepth(self, price, size):
-        if size < 0:
-            self.bidDepth[f"{price}"] = self.bidDepth.get(f"{price}", 0) + size
-        elif size > 0:
-            self.askDepth[f"{price}"] = self.askDepth.get(f"{price}", 0) + size
 
-    def RemoveDepth(self, price, size):
-        if size < 0:
-            self.bidDepth[f"{price}"] = self.bidDepth.get(f"{price}", 0) - size
-        elif size > 0:
-            self.askDepth[f"{price}"] = self.askDepth.get(f"{price}", 0) - size
+    def AddDepth(self, price, delta, side):
+        if side == "bid":
+            self.bidDepth[f"{price}"] = self.bidDepth.get(f"{price}", 0) - abs(delta)
+        elif side == "ask":
+            self.askDepth[f"{price}"] = self.askDepth.get(f"{price}", 0) + abs(delta)
+
+    def RemoveDepth(self, price, delta, side):
+        if side == "bid":
+            self.bidDepth[f"{price}"] = self.bidDepth.get(f"{price}", 0) + abs(delta)
+        elif side == "ask":
+            self.askDepth[f"{price}"] = self.askDepth.get(f"{price}", 0) - abs(delta)
 
     @property
     def allStats(self):
