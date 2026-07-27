@@ -171,11 +171,11 @@ class LOB:
                 self.RemoveDepth(order.price, delta, order.side)
                 order.removeSize(delta)
 
-            if order.isFilled:
-                self.fillOrder(order)
-            else:
-                self.PrintPartialOrderFill(order, delta)
-            return
+                if order.isFilled:
+                    self.fillOrder(order)
+                else:
+                    self.PrintPartialOrderFill(order, delta)
+                return
         raise ValueError("Order to be partially filled not found in the order set.")
     
     def MKTorder(self, size):
@@ -288,7 +288,7 @@ class LOB:
         if side == "bid":
             return self.bidPrice - distance if self.bidPrice is not None else None
         elif side == "ask":
-            return abs(distance - self.askPrice) if self.askPrice is not None else None
+            return distance + self.askPrice if self.askPrice is not None else None
         else:
             raise ValueError("Side must be either 'bid' or 'ask'.")
         
