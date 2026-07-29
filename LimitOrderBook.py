@@ -1,9 +1,8 @@
-from decimal import Decimal
 import heapq
 from Order import Order
 
 class LOB:
-    def __init__(self, lotSize=1, epsilon=1, tickSize=1):  # resolution params
+    def __init__(self, lotSize=1, epsilon=0.1, tickSize=0.01):  # resolution params
         self.orderSet = []
         self.askSet = []
         self.bidSet = []
@@ -19,17 +18,15 @@ class LOB:
         self.tickSize = tickSize
 
     def __checkPrice(self, price):
-        if price % self.tickSize != 0:
+        if not round(price / self.tickSize, 8).is_integer():
             raise ValueError("Price must be a multiple of the tick size.")
         if price < self.tickSize:
             raise ValueError("Price must be strictly greater than or equal to the tick size.")
-        if Decimal(price).as_tuple().exponent != Decimal(self.tickSize).as_tuple().exponent:
-            raise ValueError("Price must be specified to the accuracy of the tick size.")
-        
+
     def __checkSize(self, size):
         if abs(size) < self.lotSize:
             raise ValueError("Size must be strictly greater than or equal to the lot size.")
-        if size % self.epsilon != 0:
+        if not round(abs(size) / self.epsilon, 8).is_integer():
             raise ValueError("Size must be an increment of the epsilon.")
         
     def addToSets(self, order):
@@ -267,13 +264,13 @@ class LOB:
     def spread(self):
         if self.bidPrice is None or self.askPrice is None:
             return None
-        return self.askPrice - self.bidPrice
+        return round(self.askPrice - self.bidPrice, 8)
     
     @property
     def midPrice(self):
         if self.bidPrice is None or self.askPrice is None:
             return None
-        return (self.bidPrice + self.askPrice) / 2
+        return round((self.bidPrice + self.askPrice) / 2, 8)
     
     # could also just use the depth dicts, but this is explicit method
     def getDepth(self, price, side):
@@ -284,11 +281,12 @@ class LOB:
         else:
             raise ValueError("Side must be either 'bid' or 'ask'.")
         
-    def getRelativePrice(self, distance, side):
+    def getRelativePrice(self, tickDistance, side):
+        priceDelta = tickDistance * self.tickSize
         if side == "bid":
-            return self.bidPrice - distance if self.bidPrice is not None else None
+            return round(self.bidPrice - priceDelta, 8) if self.bidPrice is not None else None
         elif side == "ask":
-            return distance + self.askPrice if self.askPrice is not None else None
+            return round(priceDelta + self.askPrice, 8) if self.askPrice is not None else None
         else:
             raise ValueError("Side must be either 'bid' or 'ask'.")
         
