@@ -127,7 +127,7 @@ class LOB:
 
         order = self.__matchOrders(price, size, self.num)
         if order is None:
-            return
+            return None
 
         self.lastPrice = order.price
         self.orderSet.append(order) # no heap needed for orderSet
@@ -135,6 +135,7 @@ class LOB:
         self.PrintOrderRecipt(order)
         self.AddDepth(price, order.size, order.side)
         self.num += 1
+        return order
 
     # sets order size to 0
     def CancelOrder(self, order):
