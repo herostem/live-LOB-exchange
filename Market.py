@@ -118,11 +118,12 @@ class Market:
 
     # adds more depth to prices closer to best quotes
     def __randomBegin(self):
-        for i in range(10):
+        for i in range(100):
+            priceDelta = i * self.LOB.tickSize
             while i > 0:
-                self.LOB.PlaceOrder(self.initialBid - i, 
+                self.LOB.PlaceOrder(round(self.initialBid - priceDelta, 8), 
                                     -1 * random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1))
-                self.LOB.PlaceOrder(self.initialAsk + i, 
+                self.LOB.PlaceOrder(round(self.initialAsk + priceDelta, 8), 
                                     random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1))
                 i -= 1
             
