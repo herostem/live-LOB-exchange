@@ -8,6 +8,8 @@ class Market:
     # min and max distances need to be scaled according to the tick size
     def __init__(self, 
                  initialBid, initialAsk,
+                 initialBuyProbability = 0.5,
+                 ticksToRegimeSwitch = 50,
                  LOB = LOB(lotSize=1, epsilon=0.1, tickSize=0.01),  
                  LMT_arrivalParams = {"omega": 1.5, "k": 2.0, 
                                       "MAX_DISTANCE": 300, "MIN_DISTANCE": -200, "MAX SIZE": 100},
@@ -31,6 +33,10 @@ class Market:
         self.rerunParams = rerunParams
 
         self.agents = [] # append agents
+        self.updateNum = 0
+        self.buyProbability = initialBuyProbability
+        self.ticksToRegimeSwitch = ticksToRegimeSwitch
+
     def __LMTrateFunction(self, distance, side):
         if distance < self.LMT_arrivalParams["MIN_DISTANCE"]:
             return 0
@@ -81,7 +87,7 @@ class Market:
     def checkMKTrates(self):
         rate = self.MKT_arrivalParams["mu"]
         if random.random() < rate:
-            if random.random() < 0.5: # 50% chance of bid or ask
+            if random.random() < self.buyProbability: # % chance of bid or ask
                 self.LOB.MKTorder(-1 * random.randrange(self.LOB.lotSize, self.MKT_arrivalParams["MAX SIZE"] + 1))
             else:
                 self.LOB.MKTorder(random.randrange(self.LOB.lotSize, self.MKT_arrivalParams["MAX SIZE"] + 1))
@@ -126,6 +132,9 @@ class Market:
                 self.LOB.PlaceOrder(round(self.initialAsk + priceDelta, 8), 
                                     random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1))
                 i -= 1
+
+    def regimeSwitch(self):
+        self.buyProbability = random.random()
             
     def __update(self):
         self.rerunCheck()
@@ -137,7 +146,11 @@ class Market:
         for agent in self.agents:
             agent.update()
         self.tradingPrice = self.LOB.lastPrice
-        print(f"Bid: {self.LOB.bidPrice}, Ask: {self.LOB.askPrice}, Last Price: {self.LOB.lastPrice}, Spread: {self.LOB.spread}, Mid Price: {self.LOB.midPrice}") # just for testing
+        print(f"Bid: {self.LOB.bidPrice}, Ask: {self.LOB.askPrice}, Last Price: {self.LOB.lastPrice}, Spread: {self.LOB.spread}, Mid Price: {self.LOB.midPrice:2.2f}") # just for testing
+        if self.updateNum == self.ticksToRegimeSwitch:
+            self.regimeSwitch()
+            self.updateNum = 0
+        self.updateNum += 1
             
     def runMarket(self, run_time):
         self.__randomBegin()
