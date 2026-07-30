@@ -32,17 +32,15 @@ class Market:
             return 0
         if distance > self.LMT_arrivalParams["MAX_DISTANCE"]:
             return 0
-        
-        elif side == "bid":
-            i = self.LOB.getRelativePrice(distance, "bid") # change i to price
-            if i is None:
-                return 0
-            rate = self.LMT_arrivalParams["k"] / (i ** self.LMT_arrivalParams["omega"])
+
+        distance = abs(distance) # for negative distances (cross the spread)
+        if distance == 0:
+            distance = 1
+
+        if side == "bid":
+            rate = self.LMT_arrivalParams["k"] / (distance ** self.LMT_arrivalParams["omega"])
         elif side == "ask":
-            i = self.LOB.getRelativePrice(distance, "ask")
-            if i is None:
-                return 0
-            rate = self.LMT_arrivalParams["k"] / (i ** self.LMT_arrivalParams["omega"])
+            rate = self.LMT_arrivalParams["k"] / (distance ** self.LMT_arrivalParams["omega"])
         else:
             raise ValueError("Side must be either 'bid' or 'ask'.")
         return rate
@@ -53,16 +51,10 @@ class Market:
         if distance > self.Cancel_arrivalParams["MAX_DISTANCE"]:
             return 0
         
-        elif side == "bid":
-            price = self.LOB.getRelativePrice(distance, "bid")
-            if price is None:
-                return 0
-            rate = self.Cancel_arrivalParams["k"] / (price ** self.Cancel_arrivalParams["omega"])
+        if side == "bid":
+            rate = self.Cancel_arrivalParams["k"] / (distance ** self.Cancel_arrivalParams["omega"])
         elif side == "ask":
-            price = self.LOB.getRelativePrice(distance, "ask")
-            if price is None:
-                return 0
-            rate = self.Cancel_arrivalParams["k"] / (price ** self.Cancel_arrivalParams["omega"])
+            rate = self.Cancel_arrivalParams["k"] / (distance ** self.Cancel_arrivalParams["omega"])
         else:
             raise ValueError("Side must be either 'bid' or 'ask'.")
         return rate
