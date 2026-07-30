@@ -2,15 +2,18 @@ from LimitOrderBook import LOB
 import random
 
 class Market:
+    # smaller omega means evener spread, larger omega means bigger drop off
+    # smaller k means less orders, larger k means more orders
+    # min and max distances need to be scaled according to the tick size
     def __init__(self, 
                  initialBid, initialAsk,
-                 LOB = LOB(lotSize=1, epsilon=1, tickSize=1),  
-                 LMT_arrivalParams = {"omega": 1.3, "k": 1.0, 
-                                      "MAX_DISTANCE": 20, "MIN_DISTANCE": 1, "MAX SIZE": 50},
-                 MKT_arrivalParams = {"mu": 0.4, "MAX SIZE": 30},
+                 LOB = LOB(lotSize=1, epsilon=0.1, tickSize=0.01),  
+                 LMT_arrivalParams = {"omega": 1.5, "k": 2.0, 
+                                      "MAX_DISTANCE": 300, "MIN_DISTANCE": -200, "MAX SIZE": 100},
+                 MKT_arrivalParams = {"mu": 0.6, "MAX SIZE": 80},
                  rerunParams = {"priceDelta": 2.0, "sizeMult": 2},
-                 Cancel_arrivalParams = {"omega": 0.7 , "k": 1.0, 
-                                         "MAX_DISTANCE": 20, "MIN_DISTANCE": 1}
+                 Cancel_arrivalParams = {"omega": 1.2 , "k": 0.25, 
+                                         "MAX_DISTANCE": 400, "MIN_DISTANCE": 1} # dont scale min
                  ):
         
         self.LOB = LOB
