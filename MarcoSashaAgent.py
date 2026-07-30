@@ -38,3 +38,36 @@ class MarcoSashaAgent: # is not concerned with P&L
             askSize = 0
 
         return max(bidSize, self.LOB.lotSize), -1 * max(askSize, self.LOB.lotSize)
+
+    def manage(self):
+        self.inventory = [order for order in self.inventory if order is not None and not order.isFilled]
+
+        if self.reservationPrice is None:
+            return
+        if self.currentBidPrice == self.reservationBid and self.currentAskPrice == self.reservationAsk:
+            return
+
+        for order in self.inventory:
+            if order.side == "bid":
+                if order.price != self.reservationBid:
+                    self.LOB.CancelOrder(order)
+                    self.inventory.remove(order)
+            elif order.side == "ask":
+                if order.price != self.reservationAsk:
+                    self.LOB.CancelOrder(order)
+                    self.inventory.remove(order)
+
+        bidSize, askSize = self.calcSizes()
+        bidOrder = self.LOB.PlaceOrder(self.reservationBid, bidSize)
+        askOrder = self.LOB.PlaceOrder(self.reservationAsk, askSize)
+        self.inventory.append(bidOrder)
+        self.inventory.append(askOrder)
+
+        # check again for insta fills
+        self.inventory = [order for order in self.inventory if order is not None and not order.isFilled]
+
+        self.currentBidPrice = self.reservationBid
+        self.currentAskPrice = self.reservationAsk
+
+    def update(self):
+        self.manage()
