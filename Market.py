@@ -1,5 +1,6 @@
 from LimitOrderBook import LOB
 import random
+import math
 
 class Market:
     # smaller omega means evener spread, larger omega means bigger drop off
@@ -63,42 +64,46 @@ class Market:
         return rate
     
     def checkLMTrates(self, side):
-        for i in range(self.LMT_arrivalParams["MIN_DISTANCE"], self.LMT_arrivalParams["MAX_DISTANCE"] + 1, self.LOB.epsilon): # step by epsilon
-            rate = self.__LMTrateFunction(i, side)
+        for i in range(self.LMT_arrivalParams["MIN_DISTANCE"], self.LMT_arrivalParams["MAX_DISTANCE"] + 1): #step by one
+            intensity = self.__LMTrateFunction(i, side)
+            rate = 1 - math.exp(-1 * intensity) # convert intensity to probability
             if rate == 0:
                 continue
 
             if random.random() < rate:
                 if side == "bid":
                     self.LOB.PlaceOrder(self.LOB.getRelativePrice(i, "bid"),
-                                        -1 * random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1, self.LOB.epsilon))
+                                        -1 * random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1))
                 elif side == "ask":
                     self.LOB.PlaceOrder(self.LOB.getRelativePrice(i, "ask"),
-                                        random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1, self.LOB.epsilon))
+                                        random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1))
                 
     def checkMKTrates(self):
         rate = self.MKT_arrivalParams["mu"]
         if random.random() < rate:
             if random.random() < 0.5: # 50% chance of bid or ask
-                self.LOB.MKTorder(-1 * random.randrange(self.LOB.lotSize, self.MKT_arrivalParams["MAX SIZE"] + 1, self.LOB.epsilon))
+                self.LOB.MKTorder(-1 * random.randrange(self.LOB.lotSize, self.MKT_arrivalParams["MAX SIZE"] + 1))
             else:
-                self.LOB.MKTorder(random.randrange(self.LOB.lotSize, self.MKT_arrivalParams["MAX SIZE"] + 1, self.LOB.epsilon))
+                self.LOB.MKTorder(random.randrange(self.LOB.lotSize, self.MKT_arrivalParams["MAX SIZE"] + 1))
 
     def checkCancelRates(self, side):
-        for i in range(self.Cancel_arrivalParams["MIN_DISTANCE"], self.Cancel_arrivalParams["MAX_DISTANCE"] + 1, self.LOB.epsilon): # step by epsilon
+        for i in range(self.Cancel_arrivalParams["MIN_DISTANCE"], self.Cancel_arrivalParams["MAX_DISTANCE"] + 1): #step by one
             if side == "bid": # scale by num of orders
                 x = sum(1 for order in self.LOB.orderSet if order.side == "bid" and 
                         order.price == self.LOB.getRelativePrice(i, "bid"))
             elif side == "ask":
                 x = sum(1 for order in self.LOB.orderSet if order.side == "ask" and 
                         order.price == self.LOB.getRelativePrice(i, "ask"))
-            rate = self.__CancelRateFunction(i, side) * x
+            if x == 0:
+                continue
+            intesnity = self.__CancelRateFunction(i, side) * x
+            rate = 1 - math.exp(-1 * intesnity) # convert intensity to probability
             if rate == 0:
                 continue
 
             if random.random() < rate:
                 for order in self.LOB.orderSet:
-                    if order.side == side and order.price == self.LOB.getRelativePrice(i,   side):
+                    if order.side == side and order.price == self.LOB.getRelativePrice(i, side):
                         self.LOB.CancelOrder(order)
                         break
 
@@ -116,9 +121,9 @@ class Market:
         for i in range(10):
             while i > 0:
                 self.LOB.PlaceOrder(self.initialBid - i, 
-                                    -1 * random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1, self.LOB.epsilon))
+                                    -1 * random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1))
                 self.LOB.PlaceOrder(self.initialAsk + i, 
-                                    random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1, self.LOB.epsilon))
+                                    random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1))
                 i -= 1
             
     def __update(self):
