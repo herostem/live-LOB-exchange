@@ -26,6 +26,7 @@ class Market:
         self.Cancel_arrivalParams = Cancel_arrivalParams
         self.rerunParams = rerunParams
 
+        self.agents = [] # append agents
     def __LMTrateFunction(self, distance, side):
         if distance < self.LMT_arrivalParams["MIN_DISTANCE"]:
             return 0
@@ -132,6 +133,8 @@ class Market:
         self.checkMKTrates()
         self.checkCancelRates("bid")
         self.checkCancelRates("ask")
+        for agent in self.agents:
+            agent.update()
         self.tradingPrice = self.LOB.lastPrice
         print(f"Bid: {self.LOB.bidPrice}, Ask: {self.LOB.askPrice}, Last Price: {self.LOB.lastPrice}, Spread: {self.LOB.spread}, Mid Price: {self.LOB.midPrice}") # just for testing
             
