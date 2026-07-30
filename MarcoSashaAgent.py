@@ -20,12 +20,37 @@ class MarcoSashaAgent: # is not concerned with P&L
     @property
     def shares(self): # positive for long, negative for short
         return -1 * sum([order.size for order in self.inventory]) 
-    
-    def reservationPrice(self, mid, shares):
-        return mid - self.riskAversion * self.volatility ** 2 * self.timeHorizon * shares
 
+    @property
+    def reservationPrice(self):
+        if self.LOB.midPrice is None:
+            return None
+        return self.LOB.midPrice - self.riskAversion * self.volatility ** 2 * self.timeHorizon * self.shares
+
+    @property
     def optimalSpread(self):
+        if self.reservationPrice is None:
+            return None
         return self.riskAversion * self.volatility ** 2 * self.timeHorizon + (2 / self.omega) * math.log(1 + (self.riskAversion / self.omega))
+
+    @property # round to proper price
+    def reservationBid(self):
+        if self.reservationPrice is None:
+            return None
+        CreservationPrice = round(self.reservationPrice * 100)
+        CoptimalSpread = round(self.optimalSpread * 100)
+        CBid = CreservationPrice - (CoptimalSpread // 2)
+        return round(CBid / 100, 2)
+
+    @property
+    def reservationAsk(self):
+        if self.reservationPrice is None:
+            return None
+        CreservationPrice = round(self.reservationPrice * 100)
+        CoptimalSpread = round(self.optimalSpread * 100)
+        CAsk = CreservationPrice + (CoptimalSpread // 2)
+        return round(CAsk / 100, 2)
+
     def calcSizes(self):
         pctINV = self.shares / self.maxINV
         # if shares positive, bid size decreases, ask size increases
