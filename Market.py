@@ -1,6 +1,7 @@
 from LimitOrderBook import LOB
 import random
 import math
+import numpy as np
 
 class Market:
     # smaller omega means evener spread, larger omega means bigger drop off
@@ -10,13 +11,13 @@ class Market:
                  initialBid, initialAsk,
                  initialBuyProbability = 0.5,
                  ticksToRegimeSwitch = 50,
-                 LOB = LOB(lotSize=1, epsilon=0.1, tickSize=0.01),  
+                 LOB = LOB(lotSize=0.1, epsilon=0.1, tickSize=0.01), 
                  LMT_arrivalParams = {"omega": 1.5, "k": 2.0, 
-                                      "MAX_DISTANCE": 300, "MIN_DISTANCE": -200, "MAX SIZE": 100},
+                                      "MAX_DISTANCE": 200, "MIN_DISTANCE": -100, "MAX SIZE": 100},
                  MKT_arrivalParams = {"mu": 0.6, "MAX SIZE": 80},
                  rerunParams = {"priceDelta": 2.0, "sizeMult": 2},
                  Cancel_arrivalParams = {"omega": 1.2 , "k": 0.25, 
-                                         "MAX_DISTANCE": 400, "MIN_DISTANCE": 1} # dont scale min
+                                         "MAX_DISTANCE": 200, "MIN_DISTANCE": 1} # dont scale min
                  ):
         
         self.LOB = LOB
@@ -77,20 +78,20 @@ class Market:
                 continue
 
             if random.random() < rate:
+                randomSize = round(np.random.choice(np.arange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + self.LOB.epsilon, self.LOB.epsilon)), 8)
                 if side == "bid":
-                    self.LOB.PlaceOrder(self.LOB.getRelativePrice(i, "bid"),
-                                        -1 * random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1))
+                    self.LOB.PlaceOrder(self.LOB.getRelativePrice(i, "bid"), -1 * randomSize)
                 elif side == "ask":
-                    self.LOB.PlaceOrder(self.LOB.getRelativePrice(i, "ask"),
-                                        random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1))
+                    self.LOB.PlaceOrder(self.LOB.getRelativePrice(i, "ask"), randomSize)
                 
     def checkMKTrates(self):
         rate = self.MKT_arrivalParams["mu"]
         if random.random() < rate:
+            randomSize = round(np.random.choice(np.arange(self.LOB.lotSize, self.MKT_arrivalParams["MAX SIZE"] + self.LOB.epsilon, self.LOB.epsilon)), 8)
             if random.random() < self.buyProbability: # % chance of bid or ask
-                self.LOB.MKTorder(-1 * random.randrange(self.LOB.lotSize, self.MKT_arrivalParams["MAX SIZE"] + 1))
+                self.LOB.MKTorder(-1 * randomSize)
             else:
-                self.LOB.MKTorder(random.randrange(self.LOB.lotSize, self.MKT_arrivalParams["MAX SIZE"] + 1))
+                self.LOB.MKTorder(randomSize)
 
     def checkCancelRates(self, side):
         for i in range(self.Cancel_arrivalParams["MIN_DISTANCE"], self.Cancel_arrivalParams["MAX_DISTANCE"] + 1): #step by one
@@ -124,13 +125,12 @@ class Market:
 
     # adds more depth to prices closer to best quotes
     def __randomBegin(self):
-        for i in range(100):
+        for i in range(50):
             priceDelta = i * self.LOB.tickSize
             while i > 0:
-                self.LOB.PlaceOrder(round(self.initialBid - priceDelta, 8), 
-                                    -1 * random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1))
-                self.LOB.PlaceOrder(round(self.initialAsk + priceDelta, 8), 
-                                    random.randrange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + 1))
+                randomSize = round(np.random.choice(np.arange(self.LOB.lotSize, self.LMT_arrivalParams["MAX SIZE"] + self.LOB.epsilon, self.LOB.epsilon)), 8)
+                self.LOB.PlaceOrder(round(self.initialBid - priceDelta, 8), -1 * randomSize)
+                self.LOB.PlaceOrder(round(self.initialAsk + priceDelta, 8), randomSize)
                 i -= 1
 
     def regimeSwitch(self):
