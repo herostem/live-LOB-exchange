@@ -1,5 +1,6 @@
-from Market import Market
 import math
+from collections import deque
+import numpy as np
 
 # lower risk aversion means more aggressive, higher risk aversion means more conservative
 class MarcoSashaAgent: # is not concerned with P&L
@@ -9,7 +10,8 @@ class MarcoSashaAgent: # is not concerned with P&L
         self.riskAversion = riskAversion
         self.timeHorizon = timeHorizon
         self.omega = omega # use the market LMT arrival param
-        self.volatility = 1 # will implement in market later
+        self.midDeque = deque(maxlen=20) # for calculating volatility
+        self.volatility = 0.1 # initial volatility
 
         self.inventory = [] # all current orders
         self.currentBidPrice = 0
@@ -72,6 +74,15 @@ class MarcoSashaAgent: # is not concerned with P&L
         return max(bidSize, self.LOB.lotSize), -1 * max(askSize, self.LOB.lotSize)
 
     def manage(self):
+        currentMid = self.LOB.midPrice  
+        if currentMid is not None:
+            self.midDeque.append(currentMid)
+            if len(self.midDeque) > 1:
+                diffArray = np.diff(self.midDeque)
+                self.volatility = round(np.std(diffArray), 8)
+                if self.volatility == 0:
+                    self.volatility = 0.01
+
         self.inventory = [order for order in self.inventory if order is not None and not order.isFilled]
 
         if self.reservationPrice is None:
