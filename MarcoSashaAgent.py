@@ -1,6 +1,7 @@
 from Market import Market
 import math
 
+# lower risk aversion means more aggressive, higher risk aversion means more conservative
 class MarcoSashaAgent: # is not concerned with P&L
     def __init__(self, LOB, omega, riskAversion = 0.1, timeHorizon = 1, stdSize = 20, maxINV = 200):
         self.LOB = LOB
@@ -55,9 +56,15 @@ class MarcoSashaAgent: # is not concerned with P&L
         pctINV = self.shares / self.maxINV
         # if shares positive, bid size decreases, ask size increases
         # if shares negative, bid size increases, ask size decreases
-        bidSize = ((self.stdSize * (1 - pctINV)) / self.LOB.epsilon) * self.LOB.epsilon
-        askSize = ((self.stdSize * (1 + pctINV)) / self.LOB.epsilon) * self.LOB.epsilon
+        bid = self.stdSize * (1 - pctINV)
+        ask = self.stdSize * (1 + pctINV)
 
+        bid = round(bid / self.LOB.epsilon)
+        ask = round(ask / self.LOB.epsilon)
+
+        bidSize = round(bid * self.LOB.epsilon, 8)
+        askSize = round(ask * self.LOB.epsilon, 8)
+        
         if abs(self.shares) >= self.maxINV:
             bidSize = 0
             askSize = 0
