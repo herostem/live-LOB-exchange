@@ -13,11 +13,11 @@ class Market:
                  ticksToRegimeSwitch = 50,
                  LOB = LOB(lotSize=0.1, epsilon=0.1, tickSize=0.01), 
                  LMT_arrivalParams = {"omega": 1.5, "k": 2.0, 
-                                      "MAX_DISTANCE": 200, "MIN_DISTANCE": -100, "MAX SIZE": 100},
+                                      "MAX_DISTANCE": 50, "MIN_DISTANCE": -50, "MAX SIZE": 100},
                  MKT_arrivalParams = {"mu": 0.6, "MAX SIZE": 80},
                  rerunParams = {"priceDelta": 2.0, "sizeMult": 2},
                  Cancel_arrivalParams = {"omega": 1.2 , "k": 0.25, 
-                                         "MAX_DISTANCE": 200, "MIN_DISTANCE": 1} # dont scale min
+                                         "MAX_DISTANCE": 50, "MIN_DISTANCE": 1} # dont scale min
                  ):
         
         self.LOB = LOB
