@@ -83,8 +83,17 @@ class MarcoSashaAgent: # is not concerned with P&L
                     self.inventory.remove(order)
 
         bidSize, askSize = self.calcSizes()
-        bidOrder = self.LOB.PlaceOrder(self.reservationBid, bidSize)
-        askOrder = self.LOB.PlaceOrder(self.reservationAsk, askSize)
+
+        try:
+            bidOrder = self.LOB.PlaceOrder(self.reservationBid, bidSize)
+        except ValueError:
+            bidOrder = self.LOB.PlaceOrder(self.reservationBid, round(bidSize))
+
+        try:
+            askOrder = self.LOB.PlaceOrder(self.reservationAsk, askSize)
+        except ValueError:
+            askOrder = self.LOB.PlaceOrder(self.reservationAsk, round(askSize))
+
         self.inventory.append(bidOrder)
         self.inventory.append(askOrder)
 
