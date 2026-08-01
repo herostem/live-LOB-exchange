@@ -2,7 +2,8 @@ import heapq
 from Order import Order
 
 class LOB:
-    def __init__(self, lotSize=1, epsilon=0.1, tickSize=0.01):  # resolution params
+    def __init__(self, lotSize=0.1, epsilon=0.1, tickSize=0.01):  # resolution params
+        # granularity of lotSize and epsilon must match
         self.orderSet = []
         self.askSet = []
         self.bidSet = []
@@ -54,7 +55,7 @@ class LOB:
         print(f"Order partially filled at {order.time} | Price = {order.price} | Units Filled = {amt} | Units Remaining = {order.size}")
 
     def __matchOrders(self, price, size, id):
-        order = Order(price, size, id)
+        order = Order(price, round(size, 8), id)
 
         if size < 0: #bid order match to ask
             if self.askPrice is None or self.askSet is None: # check opposite side
@@ -74,15 +75,17 @@ class LOB:
                     usableSize = 0
                     break
                 elif x.quantity > abs(usableSize): # spends all usable size without fully filling order
-                    self.partialFillOrder(x, usableSize)
+                    self.partialFillOrder(x, round(usableSize, 8))
                     self.lastPrice = x.price
                     usableSize = 0
                     break
                 elif x.quantity < abs(usableSize):
-                    usableSize -= x.quantity
+                    usableSize -= round(x.quantity, 8)
+                    usableSize = round(usableSize, 8)
                     self.fillOrder(x) # sets size 0
                     self.lastPrice = x.price
             if usableSize != 0:
+                order.size = round(-1 * usableSize, 8)
                 return order
             else:
                 return None
@@ -105,15 +108,17 @@ class LOB:
                     usableSize = 0
                     break
                 elif x.quantity > abs(usableSize):
-                    self.partialFillOrder(x, usableSize)
+                    self.partialFillOrder(x, round(usableSize, 8))
                     self.lastPrice = x.price
                     usableSize = 0
                     break
                 elif x.quantity < abs(usableSize):
-                    usableSize -= x.quantity
+                    usableSize -= round(x.quantity, 8)
+                    usableSize = round(usableSize, 8)
                     self.fillOrder(x)
                     self.lastPrice = x.price
             if usableSize != 0:
+                order.size = round(usableSize, 8)
                 return order
             else:
                 return None
@@ -181,7 +186,7 @@ class LOB:
             if self.askSet is None:
                 return
 
-            usableSize = abs(size)
+            usableSize = round(abs(size), 8)
             while usableSize > 0 and self.askSet:
                 x = self.askSet[0]
                 if x.isFilled:
@@ -194,18 +199,19 @@ class LOB:
                     usableSize = 0
                     break
                 elif x.quantity > abs(usableSize):
-                    self.partialFillOrder(x, usableSize)
+                    self.partialFillOrder(x, round(usableSize, 8))
                     self.lastPrice = x.price
                     usableSize = 0
                     break
                 elif x.quantity < abs(usableSize):
-                    usableSize -= x.quantity
+                    usableSize -= round(x.quantity, 8)
+                    usableSize = round(usableSize, 8)
                     self.fillOrder(x)
                     self.lastPrice = x.price
             if usableSize != 0:
                 if self.bidPrice is None:
                     return
-                self.PlaceOrder(self.bidPrice, -1 * usableSize)
+                self.PlaceOrder(self.bidPrice, round(-1 * usableSize, 8))
                 return 
             else:
                 return 
@@ -227,18 +233,19 @@ class LOB:
                     usableSize = 0
                     break
                 elif x.quantity > abs(usableSize):
-                    self.partialFillOrder(x, usableSize)
+                    self.partialFillOrder(x, round(usableSize, 8))
                     self.lastPrice = x.price
                     usableSize = 0
                     break
                 elif x.quantity < abs(usableSize):
-                    usableSize -= x.quantity
+                    usableSize -= round(x.quantity, 8)
+                    usableSize = round(usableSize, 8)
                     self.fillOrder(x)
                     self.lastPrice = x.price
             if usableSize != 0:
                 if self.askPrice is None:
                     return
-                self.PlaceOrder(self.askPrice, usableSize)
+                self.PlaceOrder(self.askPrice, round(usableSize, 8))
                 return 
             else:
                 return 
