@@ -15,7 +15,7 @@ class Order:
 
     @property
     def quantity(self):
-        return abs(self.size)
+        return round(abs(self.size), 8)
 
     def __eq__(self, otherOrder):
         return self.id == otherOrder.id
@@ -41,9 +41,9 @@ class Order:
             raise ValueError("Delta cannot be greater than the order's quantity.")
         
         if self.size < 0:
-            self.size = -1 * (self.quantity - delta)
+            self.size = round(-1 * (self.quantity - delta), 8)
         else:
-            self.size = self.quantity - delta
+            self.size = round(self.quantity - delta, 8)
 
         return self.quantity
 
