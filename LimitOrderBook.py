@@ -18,13 +18,13 @@ class LOB:
         self.epsilon = epsilon
         self.tickSize = tickSize
 
-    def __checkPrice(self, price):
+    def checkPrice(self, price):
         if not round(price / self.tickSize, 8).is_integer():
             raise ValueError("Price must be a multiple of the tick size.")
         if price < self.tickSize:
             raise ValueError("Price must be strictly greater than or equal to the tick size.")
 
-    def __checkSize(self, size):
+    def checkSize(self, size):
         if abs(size) < self.lotSize:
             raise ValueError("Size must be strictly greater than or equal to the lot size.")
         if not round(abs(size) / self.epsilon, 8).is_integer():
@@ -127,8 +127,8 @@ class LOB:
             return order
 
     def PlaceOrder(self, price, size): # add order matching 
-        self.__checkPrice(price)
-        self.__checkSize(size)
+        self.checkPrice(price)
+        self.checkSize(size)
 
         order = self.__matchOrders(price, size, self.num)
         if order is None:
@@ -168,7 +168,7 @@ class LOB:
 
     # modifies size
     def partialFillOrder(self, order, delta):
-        self.__checkSize(delta)
+        self.checkSize(delta)
         for x in self.orderSet:
             if order == x:
                 self.RemoveDepth(order.price, delta, order.side)
